@@ -59,7 +59,6 @@ huggingface-cli login
 
     > **🚨 Warning:** for BigCodeBench evaluation, we strongly recommend using a Docker container since the execution of LLM generated code on a machine can lead to destructive outcomes. More info is [here](eval/chat_benchmarks/BigCodeBench/README.md).
   - **MultiPL-E:** [Multi-Programming Language Evaluation of Large Language Models of Code](https://github.com/nuprl/MultiPL-E/)
-  - **CRUXEval:** [Code Reasoning, Understanding, and Execution Evaluation](https://arxiv.org/abs/2401.03065)
   - **AIME24**: [Math Reasoning Dataset](https://huggingface.co/datasets/AI-MO/aimo-validation-aime)
   - **AMC23**: [Math Reasoning Dataset](https://huggingface.co/datasets/AI-MO/aimo-validation-amc)
   - **MATH500**: [Math Reasoning Dataset](https://huggingface.co/datasets/HuggingFaceH4/MATH-500) split from [Let's Verify Step by Step](https://github.com/openai/prm800k/tree/main?tab=readme-ov-file#math-splits)

@@ -76,7 +76,3 @@
 |             |         |                                         | sh (pass@1)             | 37.0       | 39.2             |    [Qwen2.5-Coder Technical Report](https://arxiv.org/pdf/2409.12186) (Table 17)
 |             |         |                                         | ts (pass@1)             | 73.0       | 71.7             |           [Qwen2.5-Coder Technical Report](https://arxiv.org/pdf/2409.12186) (Table 17)                          |
 |             |         |                                         | js (pass@1)             | 69.5        | 75.2            |           [Qwen2.5-Coder Technical Report](https://arxiv.org/pdf/2409.12186) (Table 17)                          |                                 |
-| CRUXEval| Marianna| Qwen/Qwen2.5-Coder-7B-Instruct              | Input-CoT (pass@1)             | 66.2       | 65.8         |  [Qwen2.5-Coder Technical Report](https://arxiv.org/pdf/2409.12186) (Table 18)                                     |
-| CRUXEval| |               | Output-CoT (pass@1)             | 66.7      | 65.9         |                                     |
-| CRUXEval| | Qwen/Qwen2.5-Coder-3B-Instruct              | Input-CoT (pass@1)             | 53.4      | 53.2          |                                    |
-| CRUXEval| |               | Output-CoT (pass@1)             | 53.3      | 56.0         |                                     |

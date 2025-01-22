@@ -88,38 +88,38 @@ class TaskManager:
                 self.logger.warning(f"eval_instruct.py not found in {item}")
                 continue
 
-            try:
-                # Import the module
-                sys.path.insert(0, item_path)
-                spec = importlib.util.spec_from_file_location(f"eval.{benchmarks_dir}.{item}.eval_instruct", eval_path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                sys.path.pop(0)
+            # try:
+            # Import the module
+            sys.path.insert(0, item_path)
+            spec = importlib.util.spec_from_file_location(f"eval.{benchmarks_dir}.{item}.eval_instruct", eval_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            sys.path.pop(0)
 
-                # Find benchmark class
-                benchmark_classes = [
-                    cls
-                    for _, cls in inspect.getmembers(module, inspect.isclass)
-                    if (
-                        issubclass(cls, BaseBenchmark)
-                        and cls != BaseBenchmark
-                        and cls.__module__.replace(".", "/") in eval_path
-                    )
-                ]
+            # Find benchmark class
+            benchmark_classes = [
+                cls
+                for _, cls in inspect.getmembers(module, inspect.isclass)
+                if (
+                    issubclass(cls, BaseBenchmark)
+                    and cls != BaseBenchmark
+                    and cls.__module__.replace(".", "/") in eval_path
+                )
+            ]
 
-                if not benchmark_classes:
-                    self.logger.warning(f"No BaseBenchmark subclass found in {item}")
-                    continue
-
-                if len(benchmark_classes) > 1:
-                    self.logger.warning(f"Multiple benchmark classes found in {item}, using first one")
-
-                benchmark_class = benchmark_classes[0]
-                self._register_benchmark(item, benchmark_class)
-
-            except Exception as e:
-                self.logger.error(f"Error loading benchmark from {item}: {str(e)}")
+            if not benchmark_classes:
+                self.logger.warning(f"No BaseBenchmark subclass found in {item}")
                 continue
+
+            if len(benchmark_classes) > 1:
+                self.logger.warning(f"Multiple benchmark classes found in {item}, using first one")
+
+            benchmark_class = benchmark_classes[0]
+            self._register_benchmark(item, benchmark_class)
+
+            # except Exception as e:
+            #     self.logger.error(f"Error loading benchmark from {item}: {str(e)}")
+            #     continue
 
     def _register_benchmark(self, name: str, benchmark_class: Type[BaseBenchmark]):
         """Register a benchmark class and create its instance."""
