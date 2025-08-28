@@ -28,6 +28,7 @@ class HumanEvalBenchmark(BaseBenchmark):
         debug: bool = False,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize HumanEval benchmark.
@@ -42,7 +43,7 @@ class HumanEvalBenchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.languages = languages
         self.data_dir = data_dir
         self.max_tokens = max_tokens

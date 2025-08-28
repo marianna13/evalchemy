@@ -102,8 +102,9 @@ class MMLUProBenchmark(BaseBenchmark):
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
         seed: List[int] = [0, 1234, 1234, 1234],
+        **kwargs,
     ):
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.dataset_name = "TIGER-Lab/MMLU-Pro"
         self.ntrain = ntrain
         self.max_model_length = max_model_length

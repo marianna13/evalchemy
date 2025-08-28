@@ -37,10 +37,9 @@ def calc_stats(values):
     return mean, stderr
 
 
-
 def filter_by_contest_date(example):
     target_months = ["2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01"]
-    return example['contest_date'][:7] in target_months
+    return example["contest_date"][:7] in target_months
 
 
 class LiveCodeBenchV5OfficialBenchmark(BaseBenchmark):
@@ -57,6 +56,7 @@ class LiveCodeBenchV5OfficialBenchmark(BaseBenchmark):
         max_tokens: int = 32768,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize LiveCodeBenchV5 benchmark.
@@ -67,7 +67,7 @@ class LiveCodeBenchV5OfficialBenchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.debug = debug
         self.max_new_tokens = max_tokens
         self.seed = seed
@@ -353,7 +353,9 @@ class LiveCodeBenchV5OfficialBenchmark(BaseBenchmark):
         """Load LiveCodeBenchV5 questions from source."""
         self.logger.info("Loading LiveCodeBenchV5 questions from source and converting to dataset...")
         cpu_count = os.cpu_count()
-        lcb_codegen = load_dataset("livecodebench/code_generation_lite", version_tag="release_v5", cache_dir="./")['test']
+        lcb_codegen = load_dataset("livecodebench/code_generation_lite", version_tag="release_v5", cache_dir="./")[
+            "test"
+        ]
         ds = lcb_codegen.filter(filter_by_contest_date)
         processed_shards = []
         num_shards = 4

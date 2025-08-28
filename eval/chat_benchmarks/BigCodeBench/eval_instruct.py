@@ -80,6 +80,7 @@ class BigCodeBenchBenchmark(BaseBenchmark):
         safe_mode: bool = False,
         check_ground_truth: bool = False,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize BigCodeBench benchmark.
@@ -94,7 +95,7 @@ class BigCodeBenchBenchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.language = language
         os.makedirs(data_dir, exist_ok=True)
         self.data_dir = data_dir

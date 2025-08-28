@@ -50,6 +50,7 @@ class LiveCodeBenchV5Benchmark(BaseBenchmark):
         max_tokens: int = 32768,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize LiveCodeBenchV5 benchmark.
@@ -60,7 +61,7 @@ class LiveCodeBenchV5Benchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.debug = debug
         self.max_new_tokens = max_tokens
         self.seed = seed

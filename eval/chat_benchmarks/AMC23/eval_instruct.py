@@ -32,6 +32,7 @@ class AMC23Benchmark(BaseBenchmark):
         max_tokens: int = 32768,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize AMC23 benchmark.
@@ -43,12 +44,12 @@ class AMC23Benchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.data_file = data_file
         self.debug = debug
         self.seed = seed
         self.max_new_tokens = max_tokens
-        self.n_repeat = 10
+        self.n_repeat = kwargs.get("n_repeat", 1)
 
     def generate_responses(self, model: LM) -> Dict[str, Any]:
         """

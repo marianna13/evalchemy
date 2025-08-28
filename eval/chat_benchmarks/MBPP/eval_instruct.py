@@ -29,6 +29,7 @@ class MBPPBenchmark(BaseBenchmark):
         max_tokens: int = 512,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize MBPP benchmark.
@@ -43,7 +44,7 @@ class MBPPBenchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.data_dir = data_dir
         self.max_tokens = max_tokens
         self.num_examples = num_examples

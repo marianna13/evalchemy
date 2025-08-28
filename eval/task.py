@@ -7,7 +7,6 @@ import sys
 from abc import ABC, abstractmethod
 from itertools import islice
 from typing import Any, Callable, Dict, List, Optional, Type, Union
-
 import lm_eval.models as lm_eval_models
 import numpy as np
 import torch
@@ -19,9 +18,16 @@ from lm_eval.api.model import LM
 class BaseBenchmark(ABC):
     """Abstract base class for implementing LLM evaluation benchmarks."""
 
-    def __init__(self, logger: Optional[logging.Logger] = None, system_instruction: Optional[str] = None):
+    def __init__(
+        self,
+        logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
+        apply_chat_template: Optional[bool] = None,
+        **kwargs,
+    ):
         self.logger = logger or logging.getLogger(self.__class__.__name__)
         self.system_instruction = system_instruction
+        self.apply_chat_template = apply_chat_template
 
     def _normalize_model_args(self, model: LM, instances: List[Instance]) -> List[Instance]:
         for instance in instances:
@@ -59,7 +65,9 @@ class BaseBenchmark(ABC):
         return instances
 
     def _prepare_messages(
-        self, messages: List[Dict[str, str]], model: Optional[LM] = None
+        self,
+        messages: List[Dict[str, str]],
+        model: Optional[LM] = None,
     ) -> Union[List[Dict[str, str]], str]:
         """Prepare messages with system instruction if available and apply chat template if model is provided.
 
@@ -72,9 +80,25 @@ class BaseBenchmark(ABC):
         """
         if self.system_instruction:
             messages.insert(0, {"role": "system", "content": self.system_instruction})
+        if model is not None and self.apply_chat_template:
+            chat_messages = model.apply_chat_template(messages)
+            return chat_messages
+        if not self.apply_chat_template:
+            tokenizer = model.tokenizer if model is not None else None
+            if tokenizer is not None:
+                tokenizer.pad_token = tokenizer.eos_token
+                tokenized_messages = []
+                template = "<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{input}<|im_end|>\n<|im_start|>assistant\n<think>"
+                system_message, user_message = "", ""
+                for message in messages:
+                    role = message["role"]
+                    content = message["content"]
+                    if role == "system":
+                        system_message = message["content"]
+                    elif role == "user":
+                        user_message = message["content"]
 
-        if model is not None:
-            return model.apply_chat_template(messages)
+                messages = template.format(system=system_message, input=user_message)
 
         return messages
 
@@ -231,7 +255,17 @@ class TaskManager:
         """Register a benchmark class and create its instance."""
         try:
             init_params = inspect.signature(benchmark_class.__init__).parameters
+            init_params = {k: v for k, v in init_params.items() if k not in ["self", "kwargs"]}
+            init_params.update(
+                {
+                    k: v
+                    for k, v in inspect.signature(BaseBenchmark.__init__).parameters.items()
+                    if k not in ["self", "kwargs"]
+                }
+            )
             valid_kwargs = {}
+
+            print("self.benchmark_kwargs", self.benchmark_kwargs)
 
             # Only pass kwargs that the benchmark's __init__ accepts
             # Filter out None values to let benchmarks use their default values
@@ -241,7 +275,7 @@ class TaskManager:
                     # Only pass the argument if it's not None, so benchmarks can use defaults
                     if value is not None:
                         valid_kwargs[param_name] = value
-                        self.logger.debug(f"Passing {param_name}={value} to {name} benchmark")
+                        self.logger.info(f"Passing {param_name}={value} to {name} benchmark")
 
             # Ensure system_instruction is passed if available and not None
             if (
@@ -255,7 +289,7 @@ class TaskManager:
             self.tasks[name] = benchmark_class
             self.benchmark_instances[name] = instance
 
-            self.logger.debug(f"Successfully registered benchmark: {name}")
+            self.logger.info(f"Successfully registered benchmark: {name}")
 
         except Exception as e:
             self.logger.error(f"Error registering benchmark {name}: {str(e)}")

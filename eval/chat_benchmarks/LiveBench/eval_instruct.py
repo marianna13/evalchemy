@@ -50,6 +50,7 @@ class LiveBenchBenchmark(BaseBenchmark):
         max_tokens: int = 4096,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize LiveBench benchmark.
@@ -59,7 +60,7 @@ class LiveBenchBenchmark(BaseBenchmark):
             logger: Optional logger instance
             system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.dataset_name = dataset_name
         self.question_source = question_source
         self.do_sample = do_sample

@@ -30,6 +30,7 @@ class AIME25Benchmark(BaseBenchmark):
         max_tokens: int = 32768,
         logger: Optional[logging.Logger] = None,
         system_instruction: Optional[str] = None,
+        **kwargs,
     ):
         """
         Initialize AIME25 benchmark.
@@ -40,12 +41,12 @@ class AIME25Benchmark(BaseBenchmark):
             seed: Random seed for reproducibility. Default is [0, 1234, 1234, 1234] for lm-eval-harness.
             logger: Optional logger instance
         """
-        super().__init__(logger=logger, system_instruction=system_instruction)
+        super().__init__(logger=logger, system_instruction=system_instruction, **kwargs)
         self.data_file = data_file
         self.debug = debug
         self.max_new_tokens = max_tokens
         self.seed = seed
-        self.n_repeat = 10
+        self.n_repeat = kwargs.get("n_repeat", 1)
 
     def generate_responses(self, model: LM) -> Dict[str, Any]:
         """
