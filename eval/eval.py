@@ -377,7 +377,7 @@ def cli_evaluate(args: Optional[argparse.Namespace] = None) -> None:
         model_name = args.model_name
         args.model_args = update_model_args_with_name(args.model_args or "", model_name)
 
-    print("args.apply_chat_template:", args.apply_chat_template, eval(args.apply_chat_template))
+    print("args.apply_chat_template:", args.apply_chat_template)
 
     # Initialize tasks
     task_manager = InstructTaskManager(
@@ -387,7 +387,7 @@ def cli_evaluate(args: Optional[argparse.Namespace] = None) -> None:
         seed=args.seed,
         task_list=task_list,
         system_instruction=args.system_instruction,
-        apply_chat_template=eval(args.apply_chat_template),
+        apply_chat_template=eval(args.apply_chat_template) if isinstance(args.apply_chat_template, str) else args.apply_chat_template,
         n_repeat=args.n_repeat,
     )
     pretrain_task_manager = PretrainTaskManager(args.verbosity, include_path=args.include_path)
