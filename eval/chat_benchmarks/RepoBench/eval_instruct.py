@@ -2,6 +2,7 @@ from typing import Dict, List, Any, Optional
 import tempfile
 import json
 import os
+import logging
 from tqdm import tqdm
 from datasets import load_dataset
 from itertools import islice
@@ -24,9 +25,11 @@ class RepoBenchmark(BaseBenchmark):
         self,
         languages: List[str] = ["python", "java"],
         subsets: List[str] = ["cross_file_first", "cross_file_random", "in_file"],
-        max_tokens: int = 2000,
+        max_tokens: int = 128,
         debug: bool = False,
         legacy_mode: bool = False,
+        logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize RepoBench benchmark.
@@ -38,7 +41,7 @@ class RepoBenchmark(BaseBenchmark):
             debug: If true, run on debug mode using 2 samples
             legacy_mode: Whether to use legacy (v0) evaluation
         """
-        super().__init__()
+        super().__init__(logger=logger, system_instruction=system_instruction)
         self.languages = languages
         self.subsets = subsets
         self.max_tokens = max_tokens
@@ -91,7 +94,12 @@ class RepoBenchmark(BaseBenchmark):
                             example,
                             (
                                 prompt,
-                                {"max_gen_toks": 128, "temperature": 0.2, "top_p": 0.95, "do_sample": True},
+                                {
+                                    "max_new_tokens": self.max_tokens,
+                                    "temperature": 0.2,
+                                    "top_p": 0.95,
+                                    "do_sample": True,
+                                },
                             ),
                             idx,
                         )

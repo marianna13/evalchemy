@@ -35,14 +35,12 @@ class WildBenchConfig:
     end_idx: int = -1
 
     # Model configuration
-    max_tokens: int = 1024
-    temperature: float = 0.0
-    do_sample: bool = False
     engine: str = None
     model_name: str = None
     max_words_to_eval: int = 1000
+    temperature = 0.0
+    top_p = 1.0
     repetition_penalty: float = 1.0
-    top_p: float = 1.0
 
     # Evaluation configuration
     model: str = None
@@ -71,12 +69,16 @@ class WildBenchBenchmark(BaseBenchmark):
     WildBench benchmark for evaluating diverse real-world tasks.
     """
 
+    REQUIRES_OPENAI_ANNOTATOR = True
+
     def __init__(
         self,
         config: Optional[WildBenchConfig] = None,
         annotator_model: str = "gpt-4o-mini-2024-07-18",
         debug: bool = False,
+        max_tokens: int = 1024,
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize WildBench benchmark.
@@ -86,7 +88,7 @@ class WildBenchBenchmark(BaseBenchmark):
             debug: If True, run in debug mode on 2 samples
             logger: Optional logger instance
         """
-        super().__init__(logger)
+        super().__init__(logger=logger, system_instruction=system_instruction)
         if annotator_model == "auto":
             annotator_model = "gpt-4-1106-preview"
         if config:
@@ -94,6 +96,7 @@ class WildBenchBenchmark(BaseBenchmark):
             config.model = annotator_model
         self.config = config or WildBenchConfig(model=annotator_model)
         self.debug = debug
+        self.max_new_tokens = max_tokens
 
         # Task category mapping
         self.task_group_mapping = {
@@ -166,8 +169,13 @@ class WildBenchBenchmark(BaseBenchmark):
             # Load data
             id_strs, chat_history, extracted_chats, metadata = self.load_dataset()
 
+            # Remove extra fields that might not be compatible with some models
+            simplified_extracted_chats = [
+                [{"role": c["role"], "content": c["content"]} for c in chat] for chat in extracted_chats
+            ]
+
             # Prepare model inputs
-            model_inputs = [model.apply_chat_template(chat) for chat in extracted_chats]
+            model_inputs = [self._prepare_messages(chat, model) for chat in simplified_extracted_chats]
 
             # Create temporary directory
             temp_dir_obj = tempfile.TemporaryDirectory()
@@ -182,8 +190,9 @@ class WildBenchBenchmark(BaseBenchmark):
                     (
                         inputs,
                         {
-                            "max_gen_toks": self.config.max_tokens,
-                            "do_sample": self.config.do_sample,
+                            "max_new_tokens": self.max_new_tokens,
+                            "do_sample": False,
+                            "top_p": self.config.top_p,
                             "temperature": self.config.temperature,
                         },
                     ),

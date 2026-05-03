@@ -17,6 +17,8 @@ class AlpacaBenchmark(BaseBenchmark):
     Alpaca benchmark for evaluating language model responses on instruction following.
     """
 
+    REQUIRES_OPENAI_ANNOTATOR = True
+
     ANNOTATOR_CONFIG_MAP = {
         "gpt-4o-mini-2024-07-18": "weighted_alpaca_eval_gpt-4o-mini-2024-07-18",
         "gpt-4-1106-preview": "weighted_alpaca_eval_gpt4_turbo",
@@ -29,12 +31,13 @@ class AlpacaBenchmark(BaseBenchmark):
         dataset_name: str = "tatsu-lab/alpaca_eval",
         subset: str = "alpaca_eval",
         split: str = "eval",
-        max_tokens: int = 1024,
+        max_tokens: Optional[int] = 1024,
         temperature: float = 0.5,
         do_sample: bool = True,
         debug: bool = False,
         annotator_model: str = "gpt-4o-mini-2024-07-18",
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize Alpaca benchmark.
@@ -48,12 +51,13 @@ class AlpacaBenchmark(BaseBenchmark):
             do_sample: Whether to use sampling for generation
             debug: debug: If True, only evaluate first 2 examples
             logger: Optional logger instance
+            system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger)
+        super().__init__(logger=logger, system_instruction=system_instruction)
         self.dataset_name = dataset_name
         self.subset = subset
         self.split = split
-        self.max_tokens = max_tokens
+        self.max_tokens = max_tokens if max_tokens is not None else 1024
         self.temperature = temperature
         self.do_sample = do_sample
         self.debug = debug
@@ -92,7 +96,7 @@ class AlpacaBenchmark(BaseBenchmark):
             for idx, example in enumerate(eval_set):
                 try:
                     instruction = example["instruction"]
-                    formatted_instruction = model.apply_chat_template([{"role": "user", "content": instruction}])
+                    formatted_instruction = self._prepare_messages([{"role": "user", "content": instruction}], model)
 
                     all_instances.append(
                         Instance(
@@ -101,7 +105,7 @@ class AlpacaBenchmark(BaseBenchmark):
                             (
                                 formatted_instruction,
                                 {
-                                    "max_gen_toks": self.max_tokens,
+                                    "max_new_tokens": self.max_tokens,
                                     "do_sample": self.do_sample,
                                     "temperature": self.temperature,
                                 },

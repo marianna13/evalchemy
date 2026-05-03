@@ -23,11 +23,6 @@ class ZeroEvalConfig:
     start_index: int = 0
     end_index: int = -1
 
-    # Generation configuration
-    temperature: float = 0.0
-    max_tokens: int = 4096
-    do_sample: bool = False
-
 
 class ZeroEvalBenchmark(BaseBenchmark):
     """
@@ -38,12 +33,15 @@ class ZeroEvalBenchmark(BaseBenchmark):
         self,
         tasks: List[str] = ["zebra-grid", "numersense-v2", "crux", "math-l5"],
         config: Optional[ZeroEvalConfig] = None,
+        max_tokens: Optional[int] = 4096,
         debug: bool = False,
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
-        super().__init__(logger)
+        super().__init__(logger, system_instruction=system_instruction)
         self.tasks = tasks
         self.config = config or ZeroEvalConfig()
+        self.max_new_tokens = int(max_tokens) if max_tokens is not None else 4096
         self.debug = debug
 
     def load_dataset(self, data_name: str) -> Tuple[List[str], List[str], List[Dict[str, Any]], Dict[str, Any]]:
@@ -132,9 +130,9 @@ class ZeroEvalBenchmark(BaseBenchmark):
                     (
                         inputs,
                         {
-                            "temperature": self.config.temperature,
-                            "max_gen_toks": self.config.max_tokens,
-                            "do_sample": self.config.do_sample,
+                            "temperature": 0.0,
+                            "max_new_tokens": self.max_new_tokens,
+                            "do_sample": False,
                         },
                     ),
                     idx,
@@ -157,7 +155,7 @@ class ZeroEvalBenchmark(BaseBenchmark):
                 repetition_penalty=0.0,
                 temperature=0.0,
                 top_p=0.0,
-                max_tokens=4096,
+                max_tokens=self.max_new_tokens,
             )
             save_outputs(save_args, id_strs, outputs, chat_history, metadata, model_inputs, output_path)
 

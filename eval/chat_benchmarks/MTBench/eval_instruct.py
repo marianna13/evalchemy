@@ -63,13 +63,17 @@ class MTBenchBenchmark(BaseBenchmark):
     MTBench benchmark for evaluating multi-turn chat capabilities.
     """
 
+    REQUIRES_OPENAI_ANNOTATOR = False  # Can also be anthropic
+
     def __init__(
         self,
         base_path: str = "eval/chat_benchmarks/MTBench",
         config: Optional[MTBenchConfig] = None,
         debug: bool = False,
         annotator_model: str = "gpt-4o-mini-2024-07-18",
+        max_tokens: int = 1024,
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize MTBench benchmark.
@@ -79,8 +83,9 @@ class MTBenchBenchmark(BaseBenchmark):
             config: MTBench configuration object
             debug: If True, run in debug mode on 2 samples
             logger: Optional logger instance
+            system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger)
+        super().__init__(logger=logger, system_instruction=system_instruction)
         self.base_path = Path(base_path)
         if annotator_model == "auto":
             annotator_model = "gpt-4"
@@ -88,6 +93,7 @@ class MTBenchBenchmark(BaseBenchmark):
             print(f"Warning: Overwriting config.judge_model = {annotator_model} ")
             config.judge_model = annotator_model
         self.config = config or MTBenchConfig(judge_model=annotator_model)
+        self.config.max_new_token = max_tokens
         self.debug = debug
 
         # Setup paths
@@ -125,7 +131,7 @@ class MTBenchBenchmark(BaseBenchmark):
                     all_convs[q_idx].append({"role": "user", "content": question["turns"][turn_num]})
 
                     # Prepare model input
-                    prompt = model.apply_chat_template(all_convs[q_idx])
+                    prompt = self._prepare_messages(all_convs[q_idx], model)
                     batch_instances.append(
                         Instance(
                             "generate_until",
@@ -133,7 +139,7 @@ class MTBenchBenchmark(BaseBenchmark):
                             (
                                 prompt,
                                 {
-                                    "max_gen_toks": self.config.max_new_token,
+                                    "max_new_tokens": self.config.max_new_token,
                                     "do_sample": temperature >= 1e-4,
                                     "temperature": temperature,
                                 },

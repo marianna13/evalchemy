@@ -9,7 +9,7 @@ import logging
 from lm_eval.api.instance import Instance
 from lm_eval.api.model import LM
 from human_eval.evaluation import evaluate_functional_correctness
-from utils.utils import extract_generation_code, language_settings
+from .utils.utils import extract_generation_code, language_settings
 from eval.task import BaseBenchmark
 
 
@@ -22,11 +22,12 @@ class HumanEvalBenchmark(BaseBenchmark):
         self,
         languages: List[str] = ["python", "sh"],
         data_dir: str = "eval/chat_benchmarks/HumanEval/data",
-        max_tokens: int = 1024,
+        max_tokens: int = 16000,
         num_workers: int = 8,
         timeout: float = 3.0,
         debug: bool = False,
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize HumanEval benchmark.
@@ -39,8 +40,9 @@ class HumanEvalBenchmark(BaseBenchmark):
             timeout: Timeout for code execution
             debug: If True, only evaluate first 2 examples
             logger: Optional logger instance
+            system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger)
+        super().__init__(logger=logger, system_instruction=system_instruction)
         self.languages = languages
         self.data_dir = data_dir
         self.max_tokens = max_tokens
@@ -54,7 +56,7 @@ class HumanEvalBenchmark(BaseBenchmark):
 Please continue to complete the function. You are not allowed to modify the given code and do the completion only. Please return all completed function in a codeblock. Here is the given code to do completion:
 ```{}
 {}
-```
+```\n
 """.strip().format(
             language.lower(), question.strip()
         )
@@ -93,7 +95,7 @@ Please continue to complete the function. You are not allowed to modify the give
                     prompt = self.build_deepseekcoder_instruction(
                         language_settings[lang]["full_name"], example["prompt"]
                     )
-                    inputs = model.apply_chat_template([{"role": "user", "content": prompt}])
+                    inputs = self._prepare_messages([{"role": "user", "content": prompt}], model)
 
                     all_instances.append(
                         Instance(
@@ -102,8 +104,9 @@ Please continue to complete the function. You are not allowed to modify the give
                             (
                                 inputs,
                                 {
-                                    "max_gen_toks": self.max_tokens,
-                                    "do_sample": False,
+                                    "max_new_tokens": self.max_tokens,
+                                    # "do_sample": False,
+                                    "temperature": 0.6,
                                 },
                             ),
                             idx,

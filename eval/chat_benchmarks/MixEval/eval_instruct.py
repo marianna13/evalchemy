@@ -36,6 +36,8 @@ class MixEvalBenchmark(BaseBenchmark):
     MixEval benchmark for evaluating language model responses on various tasks.
     """
 
+    REQUIRES_OPENAI_ANNOTATOR = True
+
     def __init__(
         self,
         output_dir: str = "eval/chat_benchmarks/MixEval/results/",
@@ -49,6 +51,7 @@ class MixEvalBenchmark(BaseBenchmark):
         verbose: bool = False,
         debug: bool = False,
         logger: Optional[logging.Logger] = None,
+        system_instruction: Optional[str] = None,
     ):
         """
         Initialize MixEval benchmark.
@@ -65,8 +68,9 @@ class MixEvalBenchmark(BaseBenchmark):
             verbose: Whether to print verbose output
             debug: If set, only evaluate on 2 examples
             logger: Optional logger instance
+            system_instruction: Optional system instruction for the model
         """
-        super().__init__(logger)
+        super().__init__(logger=logger, system_instruction=system_instruction)
         os.makedirs(output_dir, exist_ok=True)
         if annotator_model == "auto":
             annotator_model = "gpt-3.5-turbo-0125"
@@ -172,7 +176,7 @@ class MixEvalBenchmark(BaseBenchmark):
         all_instances = []
 
         for idx, instruction in enumerate(all_prompts):
-            formatted_instruction = model.apply_chat_template([{"role": "user", "content": instruction}])
+            formatted_instruction = self._prepare_messages([{"role": "user", "content": instruction}], model)
 
             all_instances.append(
                 Instance(
@@ -259,10 +263,9 @@ class MixEvalBenchmark(BaseBenchmark):
     def _get_model_name(self, model: LM) -> str:
         if "model_identifier" in model.__dict__:
             return (
-                model.model_identifier.split("pretrained=")[1]
+                model.model_identifier.split("=")[1]
                 .split(",")[0]
                 .split("__")[-1]
-                .replace("Meta-", "")
                 .replace("-", "_")
                 .lower()
                 .replace(".", "")
